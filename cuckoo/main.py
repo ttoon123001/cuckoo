@@ -125,6 +125,7 @@ def cuckoo_resources():
     # Check if limit is realistic versus the number of VMs
     # Same for pool_size
 
+    # level --> 指明输出的级别(debug or quiet), ctx是click.core.Context的对象, 用于记录一些信息.
 def cuckoo_init(level, ctx, cfg=None):
     """Initialize Cuckoo configuration.
     @param quiet: enable quiet mode.
@@ -133,6 +134,7 @@ def cuckoo_init(level, ctx, cfg=None):
 
     # It would appear this is the first time Cuckoo is being run (on this
     # Cuckoo Working Directory anyway).
+    # 创建CWD文件夹
     if not os.path.isdir(cwd()) or not os.listdir(cwd()):
         cuckoo_create(ctx.user, cfg)
         sys.exit(0)
@@ -158,6 +160,7 @@ def cuckoo_init(level, ctx, cfg=None):
     # Only one Cuckoo process should exist per CWD. Run this check before any
     # files are possibly modified. Note that we mkdir $CWD/pidfiles/ here as
     # its CWD migration rules only kick in after the pidfile check.
+    # pidfiles
     mkdir(cwd("pidfiles"))
     pidfile = Pidfile("cuckoo")
     if pidfile.exists():
@@ -165,7 +168,8 @@ def cuckoo_init(level, ctx, cfg=None):
         sys.exit(1)
 
     pidfile.create()
-
+    
+    #检查配置文件，检查版本
     check_configs()
     check_version(ctx.ignore_vuln)
 
@@ -181,18 +185,18 @@ def cuckoo_init(level, ctx, cfg=None):
     # Ensure the user is able to create and read temporary files.
     if not ensure_tmpdir():
         sys.exit(1)
-
+    # 连接数据库
     Database().connect()
 
     # Load additional Signatures.
     load_signatures()
-
+    # 初始化cuckoo的组件（Core/startup.py）
     init_modules()
     init_tasks()
     init_yara()
     init_binaries()
-    init_rooter()
-    init_routing()
+    init_rooter() #VPN
+    init_routing() #VPN
 
     signatures = 0
     for sig in cuckoo.signatures:
